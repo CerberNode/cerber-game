@@ -5,7 +5,7 @@ const canvas = document.getElementById('snakeGame');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 
-// Настройки (аналог констант в C++)
+// Настройки
 const grid = 20;
 canvas.width = 320; 
 canvas.height = 320;
@@ -40,7 +40,7 @@ function loop() {
     snake.x += snake.dx;
     snake.y += snake.dy;
 
-    // Коллизии со стенами (как в классике — проходим насквозь)
+    // Коллизии со стенами
     if (snake.x < 0) snake.x = canvas.width - grid;
     else if (snake.x >= canvas.width) snake.x = 0;
     if (snake.y < 0) snake.y = canvas.height - grid;
@@ -57,7 +57,7 @@ function loop() {
     ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
 
     // Рисуем змейку
-    ctx.fillStyle = '#ff4500';
+    ctx.fillStyle = '#00ff00ff';
     snake.cells.forEach(function (cell, index) {
         ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
 
@@ -66,7 +66,7 @@ function loop() {
             snake.maxCells++;
             score++;
             scoreElement.innerText = score;
-            tg.HapticFeedback.impactOccurred('medium');
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             apple.x = getRandomInt(0, 16) * grid;
             apple.y = getRandomInt(0, 16) * grid;
         }
@@ -81,7 +81,7 @@ function loop() {
 }
 
 function resetGame() {
-    tg.HapticFeedback.notificationOccurred('error');
+    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
     snake.x = 160; snake.y = 160;
     snake.cells = [];
     snake.maxCells = 4;
@@ -92,23 +92,26 @@ function resetGame() {
     apple.y = getRandomInt(0, 16) * grid;
 }
 
-// Управление (Клавиатура + Кнопки)
+// Управление
 const changeDir = (x, y) => {
     if (x !== -snake.dx) snake.dx = x;
     if (y !== -snake.dy) snake.dy = y;
-    tg.HapticFeedback.impactOccurred('light');
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 };
 
 document.addEventListener('keydown', e => {
-    if (e.which === 37) changeDir(-grid, 0); // Left
-    if (e.which === 38) changeDir(0, -grid); // Up
-    if (e.which === 39) changeDir(grid, 0);  // Right
-    if (e.which === 40) changeDir(0, grid);  // Down
+    // Используем e.key вместо e.which
+    if (e.key === 'ArrowLeft')  changeDir(-grid, 0);  // Влево
+    if (e.key === 'ArrowUp')    changeDir(0, -grid); // Вверх
+    if (e.key === 'ArrowRight') changeDir(grid, 0);  // Вправо
+    if (e.key === 'ArrowDown')  changeDir(0, grid);  // Вниз
 });
 
-document.getElementById('btn-up').onclick = () => changeDir(0, -grid);
-document.getElementById('btn-down').onclick = () => changeDir(0, grid);
-document.getElementById('btn-left').onclick = () => changeDir(-grid, 0);
-document.getElementById('btn-right').onclick = () => changeDir(grid, 0);
+// Проверка на существование кнопок перед назначением клика
+if(document.getElementById('btn-up')) document.getElementById('btn-up').onclick = () => changeDir(0, -grid);
+if(document.getElementById('btn-down')) document.getElementById('btn-down').onclick = () => changeDir(0, grid);
+if(document.getElementById('btn-left')) document.getElementById('btn-left').onclick = () => changeDir(-grid, 0);
+if(document.getElementById('btn-right')) document.getElementById('btn-right').onclick = () => changeDir(grid, 0);
 
+// Запуск игры
 requestAnimationFrame(loop);

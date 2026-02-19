@@ -48,6 +48,9 @@ canvas {
     border-radius: 10px;
     cursor: pointer;
     user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .btn:active {
