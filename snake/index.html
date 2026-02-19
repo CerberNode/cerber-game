@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cerber Snake</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="score-board">SCORE: <span id="score">0</span></div>
+        <canvas id="snakeGame"></canvas>
+        <div id="controls">
+            <button class="btn" id="btn-up">▲</button>
+            <div class="row">
+                <button class="btn" id="btn-left">◀</button>
+                <button class="btn" id="btn-down">▼</button>
+                <button class="btn" id="btn-right">▶</button>
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
