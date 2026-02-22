@@ -3,65 +3,60 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 
-# Загружаем переменные из файла .env
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
-
-# Проверка, что токен загрузился
-if not TOKEN:
-    print("ОШИБКА: Токен не найден! Проверь файл .env")
-    exit()
-
 bot = telebot.TeleBot(TOKEN)
 
-# Твоя ссылка на игру (GitHub Pages)
-GAME_URL = "https://CerberNode.github.io/cerber-game/snake/"
+# ВАЖНО: Это должно быть выше обработчиков!
+GAMES = {
+    "snake": "https://CerberNode.github.io/cerber-game/snake/"
+}
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    """Обработка команды /start"""
-    markup = types.InlineKeyboardMarkup()
-    
-    # Создаем WebAppInfo с твоей ссылкой
-    web_app = types.WebAppInfo(url=GAME_URL)
-    
-    # Кнопка для запуска игры
-    btn = types.InlineKeyboardButton(text="🎮 ИГРАТЬ В ЗМЕЙКУ", web_app=web_app)
-    markup.add(btn)
-    
-    # Отправляем сообщение с кнопкой
-    bot.send_message(
-        message.chat.id, 
-        "<b>Cerber Game Engine</b> запущен.\nНажми кнопку ниже, чтобы открыть игру внутри Telegram:", 
-        parse_mode="HTML", 
-        reply_markup=markup
+    welcome_text = (
+        "<b>Cerber Game Engine</b> запущен. 🛡️\n\n"
+        "Доступные команды:\n"
+        "📂 /games — список всех игр\n"
+        "❓ /help — справка\n\n"
+        "Чтобы играть, введи /название_игры."
     )
+    bot.send_message(message.chat.id, welcome_text, parse_mode="HTML")
 
-@bot.message_handler(content_types=['web_app_data'])
-def handle_data(message):
-    """Функция для получения счета из игры (sendData в JS)"""
-    try:
-        # Получаем данные, которые игра отправила боту
-        score_data = message.web_app_data.data
-        print(f"Получены данные от пользователя {message.from_user.username}: {score_data}")
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    bot.send_message(message.chat.id, "Инструкция: введи /games и выбери игру.")
+
+@bot.message_handler(commands=['games'])
+def list_games(message):
+    games_list = "📂 <b>Доступные игры:</b>\n\n"
+    for game_name in GAMES.keys():
+        games_list += f"• /{game_name}\n"
+    bot.send_message(message.chat.id, games_list, parse_mode="HTML")
+
+# Усовершенствованный универсальный обработчик
+@bot.message_handler(func=lambda m: m.text is not None and m.text.startswith('/'))
+def dynamic_game_launcher(message):
+    # Отрезаем '/' и переводим в нижний регистр для надежности
+    command = message.text[1:].lower().split('@')[0] # split на случай если бот в группе
+    
+    if command in GAMES:
+        url = GAMES[command]
+        markup = types.InlineKeyboardMarkup()
+        web_app = types.WebAppInfo(url=url)
+        btn = types.InlineKeyboardButton(text=f"🎮 ИГРАТЬ В {command.upper()}", web_app=web_app)
+        markup.add(btn)
         
         bot.send_message(
             message.chat.id, 
-            f"🚀 <b>Результат принят!</b>\nТвой счет: <code>{score_data}</code>",
-            parse_mode="HTML"
+            f"Запуск протокола <b>{command.capitalize()}</b>...", 
+            parse_mode="HTML", 
+            reply_markup=markup
         )
-    except Exception as e:
-        print(f"Ошибка при обработке данных из Web App: {e}")
+    elif command not in ['start', 'help', 'games']:
+        # Если это не игра и не стандартная команда — игнорируем или пишем ошибку
+        bot.send_message(message.chat.id, "❌ Неизвестная игра. Введи /games для списка.")
 
 if __name__ == '__main__':
-    print("---------------------------------")
-    print("Бот Cerber Game запущен успешно!")
-    print("Используется Python 3.12")
-    print("Напишите /start в Telegram.")
-    print("---------------------------------")
-    
-    try:
-        # Запуск бесконечного цикла
-        bot.polling(none_stop=True)
-    except Exception as e:
-        print(f"Ошибка в работе бота: {e}")
+    print("Бот запущен...")
+    bot.infinity_polling() # Более стабильный метод вместо polling
